@@ -1,3 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Expense Tracker</title>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
 <body>
 
     <div class="container">
@@ -35,6 +47,7 @@
 
                 <div class="form-group">
                     <label for="category">Category</label>
+
                     <select id="category" required>
                         <option value="">Select category</option>
                         <option value="Food">Food</option>
@@ -47,6 +60,7 @@
 
                 <div class="form-group">
                     <label for="date">Date</label>
+
                     <input
                         type="date"
                         id="date"
@@ -87,7 +101,10 @@
             <div class="controls">
 
                 <div class="form-group">
-                    <label for="search-expense">Search Expenses</label>
+                    <label for="search-expense">
+                        Search Expenses
+                    </label>
+
                     <input
                         type="text"
                         id="search-expense"
@@ -96,7 +113,9 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="filter-category">Filter by Category</label>
+                    <label for="filter-category">
+                        Filter by Category
+                    </label>
 
                     <select id="filter-category">
                         <option value="All">All Categories</option>
@@ -109,7 +128,9 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="sort-expenses">Sort By</label>
+                    <label for="sort-expenses">
+                        Sort By
+                    </label>
 
                     <select id="sort-expenses">
                         <option value="newest">Newest First</option>
@@ -136,6 +157,8 @@
     </div>
 
 
-    <script src="script.js"></script>
+    <script src="js/app.js"></script>
 
 </body>
+
+</html>
