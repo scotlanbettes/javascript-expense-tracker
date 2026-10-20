@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Expense Tracker</title>
+    <title>Expense Tracker V2</title>
 
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -14,80 +14,220 @@
 
     <div class="container">
 
-        <h1>💰 Expense Tracker</h1>
+        <h1>💰 Expense Tracker V2</h1>
 
-        <!-- Add Expense Form -->
+
+        <!-- Add Transaction Form -->
         <section class="form-section">
 
-            <h2>Add Expense</h2>
+            <h2>Add Transaction</h2>
 
             <form id="expense-form">
 
+                <!-- Transaction Type -->
                 <div class="form-group">
-                    <label for="description">Description</label>
+
+                    <label for="transaction-type">
+                        Transaction Type
+                    </label>
+
+                    <select id="transaction-type" required>
+
+                        <option value="">
+                            Select type
+                        </option>
+
+                        <option value="expense">
+                            Expense
+                        </option>
+
+                        <option value="income">
+                            Income
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- Description -->
+                <div class="form-group">
+
+                    <label for="description">
+                        Description
+                    </label>
+
                     <input
                         type="text"
                         id="description"
-                        placeholder="e.g. Lunch"
+                        placeholder="e.g. Lunch or Salary"
                         required
                     >
+
                 </div>
 
+
+                <!-- Amount -->
                 <div class="form-group">
-                    <label for="amount">Amount</label>
+
+                    <label for="amount">
+                        Amount
+                    </label>
+
                     <input
                         type="number"
                         id="amount"
                         placeholder="e.g. 500"
-                        min="0"
+                        min="0.01"
                         step="0.01"
                         required
                     >
+
                 </div>
 
+
+                <!-- Category -->
                 <div class="form-group">
-                    <label for="category">Category</label>
+
+                    <label for="category">
+                        Category
+                    </label>
 
                     <select id="category" required>
-                        <option value="">Select category</option>
-                        <option value="Food">Food</option>
-                        <option value="Transport">Transport</option>
-                        <option value="Shopping">Shopping</option>
-                        <option value="Bills">Bills</option>
-                        <option value="Other">Other</option>
+
+                        <option value="">
+                            Select category
+                        </option>
+
+                        <!-- Expense Categories -->
+                        <option value="Food">
+                            Food
+                        </option>
+
+                        <option value="Transport">
+                            Transport
+                        </option>
+
+                        <option value="Shopping">
+                            Shopping
+                        </option>
+
+                        <option value="Bills">
+                            Bills
+                        </option>
+
+                        <option value="Rent">
+                            Rent
+                        </option>
+
+                        <option value="Health">
+                            Health
+                        </option>
+
+                        <option value="Education">
+                            Education
+                        </option>
+
+
+                        <!-- Income Categories -->
+                        <option value="Salary">
+                            Salary
+                        </option>
+
+                        <option value="Freelance">
+                            Freelance
+                        </option>
+
+                        <option value="Business">
+                            Business
+                        </option>
+
+                        <option value="Investment">
+                            Investment
+                        </option>
+
+
+                        <option value="Other">
+                            Other
+                        </option>
+
                     </select>
+
                 </div>
 
+
+                <!-- Date -->
                 <div class="form-group">
-                    <label for="date">Date</label>
+
+                    <label for="date">
+                        Date
+                    </label>
 
                     <input
                         type="date"
                         id="date"
                         required
                     >
+
                 </div>
 
-                <button type="submit">Add Expense</button>
+
+                <!-- Submit Button -->
+                <button type="submit">
+                    Add Transaction
+                </button>
 
             </form>
 
         </section>
 
 
-        <!-- Summary -->
+        <!-- Financial Summary -->
         <section class="summary-section">
 
             <div class="summary">
 
                 <div>
-                    <h3>Total</h3>
-                    <p id="total-expenses">0</p>
+
+                    <h3>Balance</h3>
+
+                    <p id="balance">
+                        0
+                    </p>
+
                 </div>
 
+
                 <div>
-                    <h3>Number of Expenses</h3>
-                    <p id="expense-count">0</p>
+
+                    <h3>Total Income</h3>
+
+                    <p id="total-income">
+                        0
+                    </p>
+
+                </div>
+
+
+                <div>
+
+                    <h3>Total Expenses</h3>
+
+                    <p id="total-expenses">
+                        0
+                    </p>
+
+                </div>
+
+
+                <div>
+
+                    <h3>Transactions</h3>
+
+                    <p id="transaction-count">
+                        0
+                    </p>
+
                 </div>
 
             </div>
@@ -100,44 +240,116 @@
 
             <div class="controls">
 
+
+                <!-- Search -->
                 <div class="form-group">
+
                     <label for="search-expense">
-                        Search Expenses
+                        Search Transactions
                     </label>
 
                     <input
                         type="text"
                         id="search-expense"
-                        placeholder="e.g. Lunch"
+                        placeholder="e.g. Lunch or Salary"
                     >
+
                 </div>
 
+
+                <!-- Category Filter -->
                 <div class="form-group">
+
                     <label for="filter-category">
                         Filter by Category
                     </label>
 
                     <select id="filter-category">
-                        <option value="All">All Categories</option>
-                        <option value="Food">Food</option>
-                        <option value="Transport">Transport</option>
-                        <option value="Shopping">Shopping</option>
-                        <option value="Bills">Bills</option>
-                        <option value="Other">Other</option>
+
+                        <option value="All">
+                            All Categories
+                        </option>
+
+                        <option value="Food">
+                            Food
+                        </option>
+
+                        <option value="Transport">
+                            Transport
+                        </option>
+
+                        <option value="Shopping">
+                            Shopping
+                        </option>
+
+                        <option value="Bills">
+                            Bills
+                        </option>
+
+                        <option value="Rent">
+                            Rent
+                        </option>
+
+                        <option value="Health">
+                            Health
+                        </option>
+
+                        <option value="Education">
+                            Education
+                        </option>
+
+                        <option value="Salary">
+                            Salary
+                        </option>
+
+                        <option value="Freelance">
+                            Freelance
+                        </option>
+
+                        <option value="Business">
+                            Business
+                        </option>
+
+                        <option value="Investment">
+                            Investment
+                        </option>
+
+                        <option value="Other">
+                            Other
+                        </option>
+
                     </select>
+
                 </div>
 
+
+                <!-- Sort -->
                 <div class="form-group">
+
                     <label for="sort-expenses">
                         Sort By
                     </label>
 
                     <select id="sort-expenses">
-                        <option value="newest">Newest First</option>
-                        <option value="oldest">Oldest First</option>
-                        <option value="highest">Highest Amount</option>
-                        <option value="lowest">Lowest Amount</option>
+
+                        <option value="newest">
+                            Newest First
+                        </option>
+
+                        <option value="oldest">
+                            Oldest First
+                        </option>
+
+                        <option value="highest">
+                            Highest Amount
+                        </option>
+
+                        <option value="lowest">
+                            Lowest Amount
+                        </option>
+
                     </select>
+
                 </div>
 
             </div>
@@ -145,10 +357,10 @@
         </section>
 
 
-        <!-- Expense List -->
+        <!-- Transaction List -->
         <section class="expenses-section">
 
-            <h2>Expenses</h2>
+            <h2>Transactions</h2>
 
             <div id="expense-list"></div>
 

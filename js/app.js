@@ -1,290 +1,809 @@
-let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
-let editingExpenseId = null;
-
-const filterCategory = document.getElementById("filter-category");
-const expenseForm = document.getElementById("expense-form");
-const descriptionInput = document.getElementById("description");
-const amountInput = document.getElementById("amount");
-const categoryInput = document.getElementById("category");
-const dateInput = document.getElementById("date");
-const expenseList = document.getElementById("expense-list");
-const totalExpenses = document.getElementById("total-expenses");
-const expenseCount = document.getElementById("expense-count");
-const searchInput = document.getElementById("search-expense");
-const sortExpenses = document.getElementById("sort-expenses");
-
-const submitButton = expenseForm.querySelector('button[type="submit"]');
+// ========================================
+// Expense Tracker V2
+// ========================================
 
 
-function displayExpenses(category = "All", searchTerm = "", sortBy = "newest") {
-    expenseList.innerHTML = "";
+// ----------------------------------------
+// Load and migrate data
+// ----------------------------------------
 
-    let filteredExpenses = category === "All"
-        ? [...expenses]
-        : expenses.filter(function(expense) {
-            return expense.category === category;
-        });
+const savedTransactions = JSON.parse(
+    localStorage.getItem("transactions")
+);
 
-    filteredExpenses = filteredExpenses.filter(function(expense) {
-        return expense.description
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase());
+const oldExpenses = JSON.parse(
+    localStorage.getItem("expenses")
+) || [];
+
+let transactions = [];
+
+
+// If V2 transactions already exist, use them
+if (savedTransactions) {
+
+    transactions = savedTransactions.map(function(transaction) {
+
+        return {
+            ...transaction,
+            amount: Number(transaction.amount),
+            type: transaction.type || "expense"
+        };
+
     });
 
 
-    if (sortBy === "newest") {
-        filteredExpenses.sort(function(a, b) {
-            return new Date(b.date) - new Date(a.date);
-        });
-    }
+// Otherwise migrate the old V1 expenses
+} else if (oldExpenses.length > 0) {
 
-    if (sortBy === "oldest") {
-        filteredExpenses.sort(function(a, b) {
-            return new Date(a.date) - new Date(b.date);
-        });
-    }
+    transactions = oldExpenses.map(function(expense) {
 
-    if (sortBy === "highest") {
-        filteredExpenses.sort(function(a, b) {
-            return Number(b.amount) - Number(a.amount);
-        });
-    }
+        return {
+            id: expense.id,
+            type: "expense",
+            description: expense.description,
+            amount: Number(expense.amount),
+            category: expense.category,
+            date: expense.date
+        };
 
-    if (sortBy === "lowest") {
-        filteredExpenses.sort(function(a, b) {
-            return Number(a.amount) - Number(b.amount);
-        });
-    }
-
-
-    filteredExpenses.forEach(function(expense) {
-        const expenseElement = document.createElement("div");
-
-        expenseElement.innerHTML = `
-            <p><strong>Description:</strong> ${expense.description}</p>
-            <p><strong>Amount:</strong> ${expense.amount}</p>
-            <p><strong>Category:</strong> ${expense.category}</p>
-            <p><strong>Date:</strong> ${expense.date}</p>
-
-            <button onclick="editExpense(${expense.id})">
-                Edit
-            </button>
-
-            <button onclick="deleteExpense(${expense.id})">
-                Delete
-            </button>
-
-            <hr>
-        `;
-
-        expenseList.appendChild(expenseElement);
-    });
-}
-
-
-function deleteExpense(id) {
-    expenses = expenses.filter(function(expense) {
-        return expense.id !== id;
     });
 
-    localStorage.setItem("expenses", JSON.stringify(expenses));
-
-    displayExpenses(
-        filterCategory.value,
-        searchInput.value,
-        sortExpenses.value
+    localStorage.setItem(
+        "transactions",
+        JSON.stringify(transactions)
     );
 
-    calculateTotal(filterCategory.value);
-    calculateExpenseCount(filterCategory.value);
 }
 
 
-function editExpense(id) {
-    const expense = expenses.find(function(expense) {
-        return expense.id === id;
-    });
+let editingTransactionId = null;
 
-    if (!expense) {
-        return;
+
+// ========================================
+// DOM Elements
+// ========================================
+
+const expenseForm =
+    document.getElementById("expense-form");
+
+const transactionTypeInput =
+    document.getElementById("transaction-type");
+
+const descriptionInput =
+    document.getElementById("description");
+
+const amountInput =
+    document.getElementById("amount");
+
+const categoryInput =
+    document.getElementById("category");
+
+const dateInput =
+    document.getElementById("date");
+
+const expenseList =
+    document.getElementById("expense-list");
+
+const searchInput =
+    document.getElementById("search-expense");
+
+const filterCategory =
+    document.getElementById("filter-category");
+
+const sortExpenses =
+    document.getElementById("sort-expenses");
+
+
+const balanceElement =
+    document.getElementById("balance");
+
+const totalIncomeElement =
+    document.getElementById("total-income");
+
+const totalExpensesElement =
+    document.getElementById("total-expenses");
+
+const transactionCountElement =
+    document.getElementById("transaction-count");
+
+
+const submitButton =
+    expenseForm.querySelector('button[type="submit"]');
+
+
+// ========================================
+// Save Transactions
+// ========================================
+
+function saveTransactions() {
+
+    localStorage.setItem(
+        "transactions",
+        JSON.stringify(transactions)
+    );
+
+}
+
+
+// ========================================
+// Display Transactions
+// ========================================
+
+function displayTransactions(
+    category = "All",
+    searchTerm = "",
+    sortBy = "newest"
+) {
+
+    expenseList.innerHTML = "";
+
+
+    // ------------------------------------
+    // Filter by category
+    // ------------------------------------
+
+    let filteredTransactions =
+        category === "All"
+            ? [...transactions]
+            : transactions.filter(function(transaction) {
+
+                return transaction.category === category;
+
+            });
+
+
+    // ------------------------------------
+    // Search by description
+    // ------------------------------------
+
+    filteredTransactions =
+        filteredTransactions.filter(function(transaction) {
+
+            return transaction.description
+                .toLowerCase()
+                .includes(searchTerm.toLowerCase());
+
+        });
+
+
+    // ------------------------------------
+    // Sort transactions
+    // ------------------------------------
+
+    if (sortBy === "newest") {
+
+        filteredTransactions.sort(function(a, b) {
+
+            return new Date(b.date) - new Date(a.date);
+
+        });
+
     }
 
-    editingExpenseId = id;
 
-    descriptionInput.value = expense.description;
-    amountInput.value = expense.amount;
-    categoryInput.value = expense.category;
-    dateInput.value = expense.date;
+    if (sortBy === "oldest") {
 
-    submitButton.textContent = "Update Expense";
+        filteredTransactions.sort(function(a, b) {
+
+            return new Date(a.date) - new Date(b.date);
+
+        });
+
+    }
+
+
+    if (sortBy === "highest") {
+
+        filteredTransactions.sort(function(a, b) {
+
+            return Number(b.amount) - Number(a.amount);
+
+        });
+
+    }
+
+
+    if (sortBy === "lowest") {
+
+        filteredTransactions.sort(function(a, b) {
+
+            return Number(a.amount) - Number(b.amount);
+
+        });
+
+    }
+
+
+    // ------------------------------------
+    // Empty state
+    // ------------------------------------
+
+    if (filteredTransactions.length === 0) {
+
+        const emptyMessage =
+            document.createElement("p");
+
+        emptyMessage.textContent =
+            "No transactions found.";
+
+        expenseList.appendChild(emptyMessage);
+
+        return;
+
+    }
+
+
+    // ------------------------------------
+    // Display each transaction
+    // ------------------------------------
+
+    filteredTransactions.forEach(
+        function(transaction) {
+
+            const transactionElement =
+                document.createElement("div");
+
+
+            const type =
+                transaction.type === "income"
+                    ? "Income"
+                    : "Expense";
+
+
+            const description =
+                document.createElement("p");
+
+            const amount =
+                document.createElement("p");
+
+            const category =
+                document.createElement("p");
+
+            const date =
+                document.createElement("p");
+
+            const transactionType =
+                document.createElement("p");
+
+
+            description.innerHTML =
+                "<strong>Description:</strong> ";
+
+            description.appendChild(
+                document.createTextNode(
+                    transaction.description
+                )
+            );
+
+
+            amount.innerHTML =
+                "<strong>Amount:</strong> ";
+
+            amount.appendChild(
+                document.createTextNode(
+                    Number(transaction.amount)
+                        .toFixed(2)
+                )
+            );
+
+
+            category.innerHTML =
+                "<strong>Category:</strong> ";
+
+            category.appendChild(
+                document.createTextNode(
+                    transaction.category
+                )
+            );
+
+
+            date.innerHTML =
+                "<strong>Date:</strong> ";
+
+            date.appendChild(
+                document.createTextNode(
+                    transaction.date
+                )
+            );
+
+
+            transactionType.innerHTML =
+                "<strong>Type:</strong> ";
+
+            transactionType.appendChild(
+                document.createTextNode(type)
+            );
+
+
+            // Edit button
+            const editButton =
+                document.createElement("button");
+
+            editButton.textContent = "Edit";
+
+            editButton.addEventListener(
+                "click",
+                function() {
+
+                    editTransaction(
+                        transaction.id
+                    );
+
+                }
+            );
+
+
+            // Delete button
+            const deleteButton =
+                document.createElement("button");
+
+            deleteButton.textContent = "Delete";
+
+            deleteButton.addEventListener(
+                "click",
+                function() {
+
+                    deleteTransaction(
+                        transaction.id
+                    );
+
+                }
+            );
+
+
+            transactionElement.appendChild(
+                transactionType
+            );
+
+            transactionElement.appendChild(
+                description
+            );
+
+            transactionElement.appendChild(
+                amount
+            );
+
+            transactionElement.appendChild(
+                category
+            );
+
+            transactionElement.appendChild(
+                date
+            );
+
+            transactionElement.appendChild(
+                editButton
+            );
+
+            transactionElement.appendChild(
+                deleteButton
+            );
+
+
+            expenseList.appendChild(
+                transactionElement
+            );
+
+        }
+    );
+
+}
+
+
+// ========================================
+// Delete Transaction
+// ========================================
+
+function deleteTransaction(id) {
+
+    transactions =
+        transactions.filter(
+            function(transaction) {
+
+                return transaction.id !== id;
+
+            }
+        );
+
+
+    saveTransactions();
+
+    refreshApp();
+
+}
+
+
+// ========================================
+// Edit Transaction
+// ========================================
+
+function editTransaction(id) {
+
+    const transaction =
+        transactions.find(
+            function(transaction) {
+
+                return transaction.id === id;
+
+            }
+        );
+
+
+    if (!transaction) {
+
+        return;
+
+    }
+
+
+    editingTransactionId = id;
+
+
+    transactionTypeInput.value =
+        transaction.type;
+
+    descriptionInput.value =
+        transaction.description;
+
+    amountInput.value =
+        transaction.amount;
+
+    categoryInput.value =
+        transaction.category;
+
+    dateInput.value =
+        transaction.date;
+
+
+    submitButton.textContent =
+        "Update Transaction";
+
 
     window.scrollTo({
         top: 0,
         behavior: "smooth"
     });
+
 }
 
 
-function calculateTotal(category = "All") {
-    const filteredExpenses = category === "All"
-        ? expenses
-        : expenses.filter(function(expense) {
-            return expense.category === category;
-        });
+// ========================================
+// Calculate Financial Summary
+// ========================================
 
-    const total = filteredExpenses.reduce(function(sum, expense) {
-        return sum + Number(expense.amount);
-    }, 0);
+function calculateSummary() {
 
-    totalExpenses.textContent = total;
+    const totalIncome =
+        transactions
+            .filter(function(transaction) {
+
+                return transaction.type === "income";
+
+            })
+            .reduce(function(total, transaction) {
+
+                return total +
+                    Number(transaction.amount);
+
+            }, 0);
+
+
+    const totalExpenses =
+        transactions
+            .filter(function(transaction) {
+
+                return transaction.type === "expense";
+
+            })
+            .reduce(function(total, transaction) {
+
+                return total +
+                    Number(transaction.amount);
+
+            }, 0);
+
+
+    const balance =
+        totalIncome - totalExpenses;
+
+
+    balanceElement.textContent =
+        balance.toFixed(2);
+
+    totalIncomeElement.textContent =
+        totalIncome.toFixed(2);
+
+    totalExpensesElement.textContent =
+        totalExpenses.toFixed(2);
+
+    transactionCountElement.textContent =
+        transactions.length;
+
 }
 
 
-function calculateExpenseCount(category = "All") {
-    const filteredExpenses = category === "All"
-        ? expenses
-        : expenses.filter(function(expense) {
-            return expense.category === category;
-        });
+// ========================================
+// Validate Transaction
+// ========================================
 
-    expenseCount.textContent = filteredExpenses.length;
-}
+function validateTransaction(
+    type,
+    description,
+    amount,
+    category,
+    date
+) {
+
+    if (type === "") {
+
+        alert(
+            "Please select a transaction type."
+        );
+
+        return false;
+
+    }
 
 
-function validateExpense(description, amount, category, date) {
     if (description.trim() === "") {
-        alert("Please enter a description.");
+
+        alert(
+            "Please enter a description."
+        );
+
         return false;
+
     }
 
-    if (amount <= 0) {
-        alert("Amount must be greater than 0.");
+
+    if (
+        !Number.isFinite(amount) ||
+        amount <= 0
+    ) {
+
+        alert(
+            "Amount must be greater than 0."
+        );
+
         return false;
+
     }
+
 
     if (category === "") {
-        alert("Please select a category.");
+
+        alert(
+            "Please select a category."
+        );
+
         return false;
+
     }
+
 
     if (date === "") {
-        alert("Please select a date.");
+
+        alert(
+            "Please select a date."
+        );
+
         return false;
+
     }
 
+
     return true;
+
 }
 
 
-expenseForm.addEventListener("submit", function(event) {
-    event.preventDefault();
+// ========================================
+// Add / Update Transaction
+// ========================================
 
-    const isValid = validateExpense(
-        descriptionInput.value,
-        Number(amountInput.value),
-        categoryInput.value,
-        dateInput.value
-    );
+expenseForm.addEventListener(
+    "submit",
+    function(event) {
 
-    if (!isValid) {
-        return;
-    }
+        event.preventDefault();
 
 
-    if (editingExpenseId !== null) {
+        const type =
+            transactionTypeInput.value;
 
-        const expense = expenses.find(function(expense) {
-            return expense.id === editingExpenseId;
-        });
+        const description =
+            descriptionInput.value.trim();
 
-        if (!expense) {
+        const amount =
+            Number(amountInput.value);
+
+        const category =
+            categoryInput.value;
+
+        const date =
+            dateInput.value;
+
+
+        const isValid =
+            validateTransaction(
+                type,
+                description,
+                amount,
+                category,
+                date
+            );
+
+
+        if (!isValid) {
+
             return;
+
         }
 
-        expense.description = descriptionInput.value;
-        expense.amount = amountInput.value;
-        expense.category = categoryInput.value;
-        expense.date = dateInput.value;
 
-        editingExpenseId = null;
+        // --------------------------------
+        // Update existing transaction
+        // --------------------------------
 
-    } else {
+        if (editingTransactionId !== null) {
 
-        const expense = {
-            id: Date.now(),
-            description: descriptionInput.value,
-            amount: amountInput.value,
-            category: categoryInput.value,
-            date: dateInput.value
-        };
+            const transaction =
+                transactions.find(
+                    function(transaction) {
 
-        expenses.push(expense);
+                        return (
+                            transaction.id ===
+                            editingTransactionId
+                        );
+
+                    }
+                );
+
+
+            if (!transaction) {
+
+                return;
+
+            }
+
+
+            transaction.type = type;
+
+            transaction.description =
+                description;
+
+            transaction.amount =
+                amount;
+
+            transaction.category =
+                category;
+
+            transaction.date =
+                date;
+
+
+            editingTransactionId = null;
+
+
+        // --------------------------------
+        // Add new transaction
+        // --------------------------------
+
+        } else {
+
+            const transaction = {
+
+                id: Date.now(),
+
+                type: type,
+
+                description: description,
+
+                amount: amount,
+
+                category: category,
+
+                date: date
+
+            };
+
+
+            transactions.push(
+                transaction
+            );
+
+        }
+
+
+        saveTransactions();
+
+
+        expenseForm.reset();
+
+
+        submitButton.textContent =
+            "Add Transaction";
+
+
+        refreshApp();
+
     }
+);
 
 
-    localStorage.setItem("expenses", JSON.stringify(expenses));
+// ========================================
+// Search
+// ========================================
+
+searchInput.addEventListener(
+    "input",
+    function() {
+
+        displayTransactions(
+            filterCategory.value,
+            searchInput.value,
+            sortExpenses.value
+        );
+
+    }
+);
 
 
-    displayExpenses(
+// ========================================
+// Category Filter
+// ========================================
+
+filterCategory.addEventListener(
+    "change",
+    function() {
+
+        displayTransactions(
+            filterCategory.value,
+            searchInput.value,
+            sortExpenses.value
+        );
+
+    }
+);
+
+
+// ========================================
+// Sorting
+// ========================================
+
+sortExpenses.addEventListener(
+    "change",
+    function() {
+
+        displayTransactions(
+            filterCategory.value,
+            searchInput.value,
+            sortExpenses.value
+        );
+
+    }
+);
+
+
+// ========================================
+// Refresh Application
+// ========================================
+
+function refreshApp() {
+
+    displayTransactions(
         filterCategory.value,
         searchInput.value,
         sortExpenses.value
     );
 
-    calculateTotal(filterCategory.value);
-    calculateExpenseCount(filterCategory.value);
+    calculateSummary();
 
-    expenseForm.reset();
-
-    submitButton.textContent = "Add Expense";
-});
+}
 
 
-searchInput.addEventListener("input", function() {
-    const selectedCategory = filterCategory.value;
-    const searchTerm = searchInput.value;
-    const selectedSort = sortExpenses.value;
+// ========================================
+// Initial Application Load
+// ========================================
 
-    displayExpenses(
-        selectedCategory,
-        searchTerm,
-        selectedSort
-    );
-
-    calculateTotal(selectedCategory);
-    calculateExpenseCount(selectedCategory);
-});
-
-
-filterCategory.addEventListener("change", function() {
-    const selectedCategory = filterCategory.value;
-    const searchTerm = searchInput.value;
-    const selectedSort = sortExpenses.value;
-
-    displayExpenses(
-        selectedCategory,
-        searchTerm,
-        selectedSort
-    );
-
-    calculateTotal(selectedCategory);
-    calculateExpenseCount(selectedCategory);
-});
-
-
-sortExpenses.addEventListener("change", function() {
-    const selectedCategory = filterCategory.value;
-    const searchTerm = searchInput.value;
-    const selectedSort = sortExpenses.value;
-
-    displayExpenses(
-        selectedCategory,
-        searchTerm,
-        selectedSort
-    );
-});
-
-
-displayExpenses();
-calculateTotal();
-calculateExpenseCount();
+refreshApp();
